@@ -1,2 +1,2 @@
-just my golang programms for practice, nothing useful
+just my golang programs for practice, nothing useful
 
