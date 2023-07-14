@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"net/http"
 
-    "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -36,8 +36,8 @@ func main () {
     fs := http.FileServer(http.Dir("styles"))
     http.Handle("/styles/", http.StripPrefix("/styles/", fs)) // serve css styles 
     tmp, _ = template.ParseGlob("templates/*.html") // parse templates from the dir
-    http.HandleFunc("/index", index)
-    http.HandleFunc("/posts", posts)
+    http.HandleFunc("/add/", add)
+    http.HandleFunc("/posts/", posts)
     http.ListenAndServe("127.0.0.1:9000", nil)
 }
 
@@ -53,13 +53,17 @@ func posts(w http.ResponseWriter, r *http.Request){
     }
 
 }
-func index(w http.ResponseWriter, r *http.Request ) {
-    infos := []Page{
-        {"first step", "info for first one", 1, []string{"one", "two"}},
-        {"second step", "info for second one", 3, []string{"some","list"}},
+func add(w http.ResponseWriter, r *http.Request ) {
+    if r.Method == "POST" {
+        title := r.FormValue("title")
+        text := r.FormValue("text")
+        ins := fmt.Sprintf(`insert into posts(title, info) values('%s', '%s')`, title, text)
+        _, err := db.Exec(ins)
+        if err != nil{
+            panic(err)
+        }
+        http.Redirect(w, r, "/posts/", http.StatusFound)
     }
-
-    for i := range infos {
-        tmp.ExecuteTemplate(w, "index.html", infos[i])
-    }
+    tmp.ExecuteTemplate(w, "add.html", nil)
 }
+
