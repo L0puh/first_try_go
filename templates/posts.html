@@ -1,6 +1,14 @@
 {{template "Header"}}
-<body>
+{{template "Links" }}
+
+{{ if . }} 
+    {{ range . }}
+    <p> {{ .Id }}</p>
     <p> {{ .Title }}</p>
     <p> {{ .Info }}</p>
+    {{ end }}
+{{ else  }}
+    <h1> there is no any post here :( </h1>
+{{ end }}
 </body>
 </html>

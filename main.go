@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -31,6 +32,7 @@ func connect_db() {
 }
 var db *sql.DB
 var tmp *template.Template
+
 func main () {
     connect_db()
     fs := http.FileServer(http.Dir("styles"))
@@ -38,20 +40,29 @@ func main () {
     tmp, _ = template.ParseGlob("templates/*.html") // parse templates from the dir
     http.HandleFunc("/add/", add)
     http.HandleFunc("/posts/", posts)
+    http.HandleFunc("/delete/", delete_post)
     http.ListenAndServe("127.0.0.1:9000", nil)
 }
 
-func posts(w http.ResponseWriter, r *http.Request){
+func get_all_posts() []Post{
     ins := `select * from posts`
     rows, _ := db.Query(ins)
-    
+    var posts_list[]Post 
     var (title, info string; id int)
     for rows.Next() {
         _ = rows.Scan(&id, &title, &info)
-        posts := Post{id, title, info}
-        tmp.ExecuteTemplate(w, "posts.html", posts)
+        post := Post{id, title, info}
+        posts_list = append(posts_list, post)
     }
+    return posts_list
+}
+func posts(w http.ResponseWriter, r *http.Request){
+    posts := get_all_posts()
+    // for post := 0; post < len(posts); post++ {
+    //     tmp.ExecuteTemplate(w, "posts.html", posts)
+    // }
 
+    tmp.ExecuteTemplate(w, "posts.html", posts)
 }
 func add(w http.ResponseWriter, r *http.Request ) {
     if r.Method == "POST" {
@@ -66,4 +77,20 @@ func add(w http.ResponseWriter, r *http.Request ) {
     }
     tmp.ExecuteTemplate(w, "add.html", nil)
 }
-
+func delete_post(w http.ResponseWriter, r *http.Request){
+    if r.Method == "POST" {
+        id := r.FormValue("id_post")
+        id_post, _ := strconv.Atoi(id)
+        fmt.Printf("%d is deleted", id_post)
+        ins := fmt.Sprintf(`delete from posts WHERE id=%d`, id_post)
+        _, err := db.Exec(ins)
+        if err != nil {
+            panic(err)
+        }
+        http.Redirect(w, r, "/posts/", http.StatusFound)
+    }
+    posts := get_all_posts()
+    for i:=0; i < len(posts); i++ {
+        tmp.ExecuteTemplate(w, "delete.html", posts[i])
+    }
+}

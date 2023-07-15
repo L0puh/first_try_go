@@ -1,0 +1,10 @@
+{{ template "Header" }}
+{{ template "Links" }}
+    <form action ="/delete/" method="POST">
+    <div>
+        <input type="checkbox" name="id_post" id="id_post" value="{{ .Id }}" checked>
+      <label for="id_post">{{ .Id }} - {{ .Title }}  </label>
+    </div>
+    <input type="submit" value="delete">
+    </form>
+</body>

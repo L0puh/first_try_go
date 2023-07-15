@@ -1,10 +1,10 @@
 {{template "Header"}}
-<body>
+{{ template "Links" }}
     <h1> FORM </h1> 
     <form action="/add/" method = "POST">
-        <input placeholder="title" name="title">
-        <textarea placeholder="text" name="text"></textarea>
-        <input type="submit" value="save">
+        <p><input placeholder="title" name="title"></p>
+        <p><textarea placeholder="text" name="text"></textarea></p>
+        <p><input type="submit" value="save"></p>
     </form>
     
    </body>
