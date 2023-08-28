@@ -6,6 +6,7 @@
             <div class="post">
                 <p><a href="post/{{.Id}}">{{ .Title }}</a></p>
                 <p>{{ .Content }} </p>
+                <p><a href="/delete/{{.Id}}"> delete </a></p>
             </div>
         {{ end }}
     {{ else }}

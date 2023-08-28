@@ -56,3 +56,10 @@ func close_db() {
     db.Close()
     log.Printf("db is closed")
 }
+func delete_postById(id int ) {
+    ins := fmt.Sprintf(`DELETE FROM blog WHERE id = %d`, id)
+    _, err := db.Exec(ins)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
