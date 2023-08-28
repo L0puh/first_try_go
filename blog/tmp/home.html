@@ -1,9 +1,15 @@
 {{ template "base" }}
-
-</head> 
 <body> 
     {{template "header"}}
-    {{ . }} 
-    <h1> hello </h1>
+    {{ if .  }}
+        {{ range . }}
+            <div class="post">
+                <p><a href="post/{{.Id}}">{{ .Title }}</a></p>
+                <p>{{ .Content }} </p>
+            </div>
+        {{ end }}
+    {{ else }}
+        <h1> posts're not found</h1>
+    {{ end  }}
 </body>
 </html>

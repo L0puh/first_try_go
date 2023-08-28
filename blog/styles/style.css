@@ -1,4 +1,19 @@
 body {
     text-align: center;
     margin: auto;
+    background-color:black;
+    color: white;
+}
+
+.post{
+    padding: 10px;
+    padding-bottom: 20px;
+
+}
+
+input, textarea {
+    border: 0;
+    width: 40%;
+    height: 90%;
+    border-radius: 5px;
 }

@@ -14,14 +14,23 @@ func main () {
 
     tmp, _ = template.ParseGlob("tmp/*.html")
     http.HandleFunc("/", home) 
-    http.HandleFunc("/add", add) 
+    http.HandleFunc("/add/", add) 
     log.Fatal(http.ListenAndServe("127.0.0.1:9000", nil))
+    close_db()
 }
 
 func home( w http.ResponseWriter, r *http.Request ) {
-    tmp.ExecuteTemplate(w, "home.html", nil)
+    posts := get_posts(10)
+    tmp.ExecuteTemplate(w, "home.html", posts)
 }
 
 func add(w http.ResponseWriter, r *http.Request ) {
-    //TODO
+    if r.Method == "POST" {
+        title := r.FormValue("title")
+        content := r.FormValue("content")
+        add_post(title, content)
+        // log.Printf("new post: %s", title)
+        http.Redirect(w, r, "/", http.StatusFound)
+    }
+    tmp.ExecuteTemplate(w, "post_add.html", nil)
 }
