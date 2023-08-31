@@ -1,0 +1,14 @@
+{{ template "base" }}
+<body> 
+    {{template "header"}}
+    {{ if .  }}
+            <div class="post">
+                <p><h1>{{.Title }}</h1></p>
+                <p>{{ .Content }} </p>
+                <p><a href="/delete/{{.Id}}"> delete </a></p>
+            </div>
+    {{ else }}
+        <h1> post is not found</h1>
+    {{ end  }}
+</body>
+</html>

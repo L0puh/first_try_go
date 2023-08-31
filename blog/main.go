@@ -17,6 +17,7 @@ func main () {
     http.HandleFunc("/", home) 
     http.HandleFunc("/add/", add) 
     http.HandleFunc("/delete/", delete_post) 
+    http.HandleFunc("/post/", show_post) 
     log.Fatal(http.ListenAndServe("127.0.0.1:9000", nil))
     close_db()
 }
@@ -36,13 +37,24 @@ func add(w http.ResponseWriter, r *http.Request ) {
     tmp.ExecuteTemplate(w, "post_add.html", nil)
 }
 
-func delete_post(w http.ResponseWriter, r *http.Request) {
-    id := r.URL.Path[len("/delete/"):]
+func convert(id string) int {
     num, err := strconv.Atoi(id)
     if err != nil {
         log.Fatal(err)
     }
+    return num
+}
+func delete_post(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Path[len("/delete/"):]
+
+    delete_postById(convert(id))
     log.Printf("deleted: post %s", id)
-    delete_postById(num)
     http.Redirect(w, r, "/", http.StatusFound)
 }
+
+func show_post(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Path[len("/post/"):]
+    post := get_post(convert(id))
+    tmp.ExecuteTemplate(w, "post.html", post)
+}
+

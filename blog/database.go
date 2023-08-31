@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -26,10 +25,7 @@ func connect_db () {
     log.Printf("connected to db")
 }
 func add_post(title string, content string) {
-    ins := fmt.Sprintf(`insert into blog (title, content)
-                        values('%s', '%s')`,  title, content)
-
-    _, err := db.Exec(ins)
+    _, err := db.Exec(`insert into blog (title, content) values($1, $2)`, title, content)
     if err != nil {
         log.Fatal(err)
     }
@@ -38,8 +34,7 @@ func add_post(title string, content string) {
 }
 
 func get_posts(limit int) []Post {
-    ins := fmt.Sprintf(`SELECT * FROM blog LIMIT %d`, limit)
-    rows, err := db.Query(ins) 
+    rows, err := db.Query(`SELECT * FROM blog LIMIT $1`, limit) 
     defer rows.Close()
     var posts[]Post
     var(id int; title string; content string)
@@ -57,9 +52,25 @@ func close_db() {
     log.Printf("db is closed")
 }
 func delete_postById(id int ) {
-    ins := fmt.Sprintf(`DELETE FROM blog WHERE id = %d`, id)
-    _, err := db.Exec(ins)
+    _, err := db.Exec(`DELETE FROM blog WHERE id = $1`, id)
     if err != nil {
         log.Fatal(err)
     }
 }
+
+func get_post(id int) Post {
+    rows, err := db.Query(`SELECT * FROM blog WHERE id=$1`, id) 
+    defer rows.Close()
+
+    var(id_p int; title string; content string)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for rows.Next() {
+        rows.Scan(&id_p, &title, &content)
+    }
+    post := Post{id_p, title, content}
+    return post
+}
+
