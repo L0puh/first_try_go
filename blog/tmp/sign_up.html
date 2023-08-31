@@ -1,0 +1,16 @@
+{{ template "base" }}
+<body>
+    {{ template "header" }}
+    {{ if . }}
+        <h1> {{ . }} </h1>
+    {{ end }}
+    <form method="POST" action="/signup/">
+        <p><input placeholder="username" name="username"></p>
+        <p><input placeholder="password" name="passoword" type="password"></p>
+        <p><input type="email" placeholder="email" name="email"></textarea></p>
+        <p><input type="submit" value="sign up"></p>
+    </form>
+
+</body>
+</html>
+

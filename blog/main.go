@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"log"
+    "golang.org/x/crypto/bcrypt" 
 	"net/http"
 	"strconv"
 )
@@ -18,16 +19,44 @@ func main () {
     http.HandleFunc("/add/", add) 
     http.HandleFunc("/delete/", delete_post) 
     http.HandleFunc("/post/", show_post) 
+    http.HandleFunc("/signup/", sign_up) 
+    http.HandleFunc("/login/", log_in) 
     log.Fatal(http.ListenAndServe("127.0.0.1:9000", nil))
     close_db()
 }
 
-func home( w http.ResponseWriter, r *http.Request ) {
+func print_err(err error) {
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+func sign_up (w http.ResponseWriter, r *http.Request) {
+    var msg string
+    if r.Method == "POST" {
+        username := r.FormValue("username")
+        email    := r.FormValue("email")
+        password := r.FormValue("password")
+        pass, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+        print_err(err)
+        if create_user(username, email, string(pass)) != false {
+            http.Redirect(w, r, "/", http.StatusFound)
+        } else {
+            msg = "the user exists. try again"
+        }
+    }
+    tmp.ExecuteTemplate(w, "sign_up.html", msg)
+}
+
+func log_in (w http.ResponseWriter, r *http.Request) {
+    //TODO
+}
+
+func home(w http.ResponseWriter, r *http.Request) {
     posts := get_posts(10)
     tmp.ExecuteTemplate(w, "home.html", posts)
 }
 
-func add(w http.ResponseWriter, r *http.Request ) {
+func add(w http.ResponseWriter, r *http.Request) {
     if r.Method == "POST" {
         title := r.FormValue("title")
         content := r.FormValue("content")
@@ -39,9 +68,7 @@ func add(w http.ResponseWriter, r *http.Request ) {
 
 func convert(id string) int {
     num, err := strconv.Atoi(id)
-    if err != nil {
-        log.Fatal(err)
-    }
+    print_err(err)
     return num
 }
 func delete_post(w http.ResponseWriter, r *http.Request) {
