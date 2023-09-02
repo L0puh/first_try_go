@@ -9,6 +9,7 @@ import (
 )
 
 var tmp *template.Template
+
 func main () {
     connect_db()
     style := http.FileServer(http.Dir("styles"))
@@ -30,26 +31,38 @@ func print_err(err error) {
         log.Fatal(err)
     }
 }
+
 func sign_up (w http.ResponseWriter, r *http.Request) {
-    var msg string
     if r.Method == "POST" {
         username := r.FormValue("username")
         email    := r.FormValue("email")
         password := r.FormValue("password")
         pass, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+
         print_err(err)
-        if create_user(username, email, string(pass)) != false {
-            http.Redirect(w, r, "/", http.StatusFound)
-        } else {
-            msg = "the user exists. try again"
+        if create_user(username, email, pass) != false {
+            http.Redirect(w, r, "/login/", http.StatusFound)
         }
     }
-    tmp.ExecuteTemplate(w, "sign_up.html", msg)
+    tmp.ExecuteTemplate(w, "sign_up.html", nil)
 }
 
 func log_in (w http.ResponseWriter, r *http.Request) {
-    //TODO
+    if r.Method == "POST" {
+        username := r.FormValue("username")
+        email    := r.FormValue("email")
+        password := r.FormValue("password")
+
+        if (check_exist(username, email)) {
+            hash_pass := get_password(username)
+            if (bcrypt.CompareHashAndPassword(hash_pass, []byte(password)) == nil) {
+                http.Redirect(w, r, "/", http.StatusFound)
+            } 
+        }
+    }
+    tmp.ExecuteTemplate(w, "log_in.html", nil)
 }
+
 
 func home(w http.ResponseWriter, r *http.Request) {
     posts := get_posts(10)
@@ -71,6 +84,7 @@ func convert(id string) int {
     print_err(err)
     return num
 }
+
 func delete_post(w http.ResponseWriter, r *http.Request) {
     id := r.URL.Path[len("/delete/"):]
 

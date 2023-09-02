@@ -29,7 +29,7 @@ func add_post(title string, content string) {
 
 }
 
-func create_user(username string, email string, password string) bool {
+func create_user(username string, email string, password []byte) bool {
     if check_exist(username, email) {
         return false
     }
@@ -46,7 +46,16 @@ func check_exist(username string, email string) bool {
     print_err(err)
     return res
 }
-
+func get_password(username string) []byte{
+    rows, err := db.Query(`SELECT password FROM users WHERE username=$1`, username) 
+    defer rows.Close()
+    var pass []byte
+    print_err(err)
+    for rows.Next() {
+        rows.Scan(&pass)
+    }
+    return pass 
+}
 func get_posts(limit int) []Post {
     rows, err := db.Query(`SELECT * FROM blog LIMIT $1`, limit) 
     defer rows.Close()
