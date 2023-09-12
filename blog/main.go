@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 var tmp *template.Template
-var login string
 
 func main () {
     connect_db()
@@ -28,6 +28,7 @@ func main () {
     http.HandleFunc("/signup/", sign_up) 
     http.HandleFunc("/login/", log_in) 
     http.HandleFunc("/profile/", profile) 
+    http.HandleFunc("/logout/", logout)
     log.Fatal(http.ListenAndServe("127.0.0.1:9000", nil))
 
     defer close_db()
@@ -40,10 +41,9 @@ func print_err(err error) {
 }
 
 func profile(w http.ResponseWriter, r *http.Request) {
-    tmp.ExecuteTemplate(w, "profile.html", login)
+    name := get_cookie_username(r)
+    tmp.ExecuteTemplate(w, "profile.html", name)
 }
-
-
 
 func sign_up (w http.ResponseWriter, r *http.Request) {
     if r.Method == "POST" {
@@ -52,12 +52,48 @@ func sign_up (w http.ResponseWriter, r *http.Request) {
         password := r.FormValue("password")
         pass, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 
+        create_cookie(w, "login", username)
         print_err(err)
         if create_user(username, email, pass) != false {
             http.Redirect(w, r, "/login/", http.StatusFound)
         }
     }
     tmp.ExecuteTemplate(w, "sign_up.html", nil)
+}
+func is_cookie(r *http.Request) bool {
+    _, err := r.Cookie("login")
+    if err != nil {
+        return false 
+    }
+    return true
+}
+func get_cookie_username(r *http.Request) string  {
+    if is_cookie(r) {
+        cookie, _ := r.Cookie("login") 
+        return cookie.Value
+    }
+    return ""
+}
+func create_cookie(w http.ResponseWriter, name string, value string) {
+    cookie := http.Cookie {
+        Name: name,
+        Value: value,
+        Path: "/",
+    } 
+    http.SetCookie(w, &cookie)
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+    if is_cookie(r) {
+        c := http.Cookie {
+            Name:       "login", 
+            Value:      "",
+            Path:       "/",
+            Expires:    time.Unix(0, 0),
+        }
+        http.SetCookie(w, &c)
+    }
+    http.Redirect(w, r, "/profile", http.StatusFound)
 }
 
 func log_in (w http.ResponseWriter, r *http.Request) {
@@ -69,7 +105,7 @@ func log_in (w http.ResponseWriter, r *http.Request) {
         if (check_exist(username, email)) {
             hash_pass := get_password(username)
             if (bcrypt.CompareHashAndPassword(hash_pass, []byte(password)) == nil) {
-                login = username
+                create_cookie(w, "login", username)
                 http.Redirect(w, r, "/", http.StatusFound)
             } 
         }
@@ -111,11 +147,15 @@ func show_post(w http.ResponseWriter, r *http.Request) {
     id   := r.URL.Path[len("/post/"):]
     post := get_post(convert(id))
     id_post := convert(id) 
-    if r.Method == "POST" && login != "" {
-        id_user := get_id(login)
-        comment := r.FormValue("comment") 
-        create_comment(id_user, id_post, comment)
-        // http.Redirect(w, r, "/", http.StatusFound)
+    if r.Method == "POST" {
+        if is_cookie(r) {
+            name := get_cookie_username(r)
+            id_user := get_id(name)
+            comment := r.FormValue("comment") 
+            create_comment(id_user, id_post, comment)
+        } else {
+            log.Printf("cookie can't be found")
+        }
     }
     comments := get_comments(id_post)
     post.Comments = comments
